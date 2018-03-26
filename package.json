@@ -1,0 +1,10 @@
+{
+  "name": "dkimcoin",
+  "version": "1.0.0",
+  "description": "Dkimcoin, the most awesome coin made in NodeJS",
+  "main": "src/server.js",
+  "repository": "https://github.com/dkim22/dkimcoin",
+  "author": "dkim22 <ehddnr1186@gamil.com>",
+  "license": "MIT",
+  "private": false
+}
