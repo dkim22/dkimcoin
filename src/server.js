@@ -2,10 +2,12 @@ const express = require("express"),
   bodyParser = require("body-parser"),
   morgan = require("morgan"),
   Blockchain = require("./blockchain"),
-  P2P = require("./p2p");
+  P2P = require("./p2p"),
+  Wallet = require("./wallet");
 
 const { getBlockchain, createNewBlock } = Blockchain;
 const { startP2PServer, connectToPeers } = P2P;
+const { initWallet } = Wallet;
 
 const PORT = process.env.HTTP_PORT || 3000;
 
@@ -18,16 +20,22 @@ app.get("/blocks", (req, res) => {
 });
 
 app.post("/blocks", (req, res) => {
-  const { body: { data } } = req;
+  const {
+    body: { data }
+  } = req;
   const newBlock = createNewBlock(data);
   res.send(newBlock);
 });
 
 app.post("/peers", (req, res) => {
-  const { body: { peer } } = req;
+  const {
+    body: { peer }
+  } = req;
   connectToPeers(peer);
   res.send();
 });
 
 const server = app.listen(PORT, () => console.log(`Dkimcoin HTTP Server running on port ${PORT}`));
+
+initWallet();
 startP2PServer(server);
