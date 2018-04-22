@@ -14,8 +14,8 @@ class TxOut {
 }
 
 class TxIn {
-  // uTxOutId
-  // uTxOutIndex
+  // TxOutId
+  // TxOutIndex
   // Signature
 }
 
@@ -51,10 +51,10 @@ const findUTxOut = (txOutId, txOutIndex, uTxOutList) => {
   return uTxOutList.find(uTxO => uTxO.txOutId === txOutId && uTxO.txOutIndex === txOutIndex);
 };
 
-const signTxIn = (tx, txInIndex, privateKey, uTxOut) => {
+const signTxIn = (tx, txInIndex, privateKey, uTxOutList) => {
   const txIn = tx.txIns[txInIndex];
   const dataToSign = tx.id;
-  const referencedUTxOut = findUTxOut(txIn.txOutId, tx.txOutIndex, uTxOuts);
+  const referencedUTxOut = findUTxOut(txIn.txOutId, tx.txOutIndex, uTxOutList);
   if (referencedUTxOut === null) {
     console.log("Couldn't find the referenced uTxOut, not signing");
     return;
@@ -237,4 +237,13 @@ const validateCoinbaseTx = (tx, blockIndex) => {
   } else {
     return true;
   }
+};
+
+module.exports = {
+  getPublicKey,
+  getTxId,
+  signTxIn,
+  TxIn,
+  Transaction,
+  TxOut
 };
