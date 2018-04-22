@@ -59,9 +59,20 @@ const signTxIn = (tx, txInIndex, privateKey, uTxOut) => {
     console.log("Couldn't find the referenced uTxOut, not signing");
     return;
   }
+  const referencedAddress = referencedUTxOut.address;
+  if (getPublicKey(privateKey) !== referencedAddress) {
+    return false;
+  }
   const key = ec.keyFromPrivate(privateKey, "hex");
   const Signature = utils.toHexString(key.sign(dataToSign).toDER());
   return Signature;
+};
+
+const getPublicKey = privateKey => {
+  return ec
+    .keyFromPrivate(privateKey, "hex")
+    .getPublic()
+    .encode("hex");
 };
 
 const updateUTxOuts = (newTxs, uTxOutList) => {
