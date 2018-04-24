@@ -43,6 +43,7 @@ const getTxId = tx => {
   const txOutContent = tx.txOuts
     .map(txOut => txOut.address + txOut.amount)
     .reduce((a, b) => a + b, "");
+
   return CryptoJS.SHA256(txInContent + txOutContent + tx.timestamp).toString();
 };
 
@@ -53,9 +54,9 @@ const findUTxOut = (txOutId, txOutIndex, uTxOutList) => {
 const signTxIn = (tx, txInIndex, privateKey, uTxOutList) => {
   const txIn = tx.txIns[txInIndex];
   const dataToSign = tx.id;
-  const referencedUTxOut = findUTxOut(txIn.txOutId, tx.txOutIndex, uTxOutList);
-  if (referencedUTxOut === null) {
-    console.log("Couldn't find the referenced uTxOut, not signing");
+  const referencedUTxOut = findUTxOut(txIn.txOutId, txIn.txOutIndex, uTxOutList);
+  if (referencedUTxOut === null || referencedUTxOut === undefined) {
+    throw Error("Couldn't find the referenced uTxOut, not signing");
     return;
   }
   const referencedAddress = referencedUTxOut.address;
@@ -63,8 +64,8 @@ const signTxIn = (tx, txInIndex, privateKey, uTxOutList) => {
     return false;
   }
   const key = ec.keyFromPrivate(privateKey, "hex");
-  const Signature = utils.toHexString(key.sign(dataToSign).toDER());
-  return Signature;
+  const signature = utils.toHexString(key.sign(dataToSign).toDER());
+  return signature;
 };
 
 const getPublicKey = privateKey => {
@@ -85,6 +86,7 @@ const updateUTxOuts = (newTxs, uTxOutList) => {
     .map(tx => tx.txIns)
     .reduce((a, b) => a.concat(b), [])
     .map(txIn => new UTxOut(txIn.txOutId, txIn.txOutIndex, "", 0));
+
   const resultingUTxOuts = uTxOutList
     .filter(uTxO => !findUTxOut(uTxO.txOutId, uTxO.txOutIndex, spentTxOuts))
     .concat(newUTxOuts);
@@ -95,7 +97,7 @@ const isTxInStructureValid = txIn => {
   if (txIn === null) {
     console.log("The txIn appears to be null");
     return false;
-  } else if (typeof txIn.Signature !== "string") {
+  } else if (typeof txIn.signature !== "string") {
     console.log("The txIn doesn't have a valid signature");
     return false;
   } else if (typeof txIn.txOutId !== "string") {
@@ -201,7 +203,7 @@ const validateTx = (tx, uTxOutList) => {
     .map(txIn => getAmountInTxIn(txIn, uTxOutList))
     .reduce((a, b) => a + b, 0);
 
-  const amountInTxOuts = tx.uTxOuts.map(txOut => txOut.amount).reduce((a, b) => a + b, 0);
+  const amountInTxOuts = tx.txOuts.map(txOut => txOut.amount).reduce((a, b) => a + b, 0);
 
   if (amountInTxIns !== amountInTxOuts) {
     console.log(`The tx: ${tx} doesn't have the same amount in the txOut as in the txIns`);
