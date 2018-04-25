@@ -66,7 +66,7 @@ const startP2PServer = server => {
     initSocketConnection(ws);
   });
   wsServer.on("error", () => {
-    console.log(error);
+    console.log("error");
   });
   console.log("Dkimcoin P2P Server running");
 };
@@ -77,7 +77,12 @@ const initSocketConnection = ws => {
   handleSocketError(ws);
   sendMessage(ws, getLatest());
   setTimeout(() => {
-    sendMessage(ws, getAllMempool());
+    sendMessageToAll(ws, getAllMempool());
+  }, 1000);
+  setInterval(() => {
+    if (sockets.includes(ws)) {
+      sendMessage(ws, "");
+    }
   }, 1000);
 };
 
