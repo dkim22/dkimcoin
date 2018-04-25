@@ -171,14 +171,24 @@ const isChainValid = candidateChain => {
   };
   if (!isGenesisValid(candidateChain[0])) {
     console.log("The candidateChains's genesisBlock is not the same as our genesisBlock");
-    return false;
+    return null;
   }
-  for (let i = 1; i < candidateChain.length; i++) {
-    if (!isBlockVaild(candidateChain[i], candidateChain[i - 1])) {
-      return false;
+
+  let foreignUTxOuts = [];
+
+  for (let i = 0; i < candidateChain.length; i++) {
+    const currentBlock = candidateChain[i];
+    if (i !== 0 && !isBlockVaild(currentBlock, candidateChain[i - 1])) {
+      return null;
+    }
+
+    foreignUTxOuts = processTxs(currentBlock.data, foreignUTxOuts, currentBlock.index);
+
+    if (foreignUTxOuts === null) {
+      return null;
     }
   }
-  return true;
+  return foreignUTxOuts;
 };
 
 const sumDifficulty = anyBlockchain =>
@@ -188,11 +198,13 @@ const sumDifficulty = anyBlockchain =>
     .reduce((a, b) => a + b);
 
 const replaceChain = candidateChain => {
-  if (
-    isChainValid(candidateChain) &&
-    sumDifficulty(candidateChain) > sumDifficulty(getBlockchain())
-  ) {
+  const foreignUTxOuts = isChainValid(candidateChain);
+  const validChain = foreignUTxOuts !== null;
+  if (validChain && sumDifficulty(candidateChain) > sumDifficulty(getBlockchain())) {
     blockchain = candidateChain;
+    uTxOuts = foreignUTxOuts;
+    updateMempool(uTxOuts);
+    require("./p2p").broadcastNewBlock();
     return true;
   } else {
     return false;
@@ -224,7 +236,12 @@ const getAccountBalance = () => getBalance(getPublicFromWallet(), uTxOuts);
 const sendTx = (address, amount) => {
   const tx = createTx(address, amount, getPrivateFromWallet(), getUTxOutList(), getMempool());
   addToMempool(tx, getUTxOutList());
+  require("./p2p").broadcastMempool();
   return tx;
+};
+
+const handleIncomingTx = tx => {
+  addToMempool(tx, getUTxOutList());
 };
 
 module.exports = {
@@ -235,5 +252,6 @@ module.exports = {
   addBlockToChain,
   replaceChain,
   getAccountBalance,
-  sendTx
+  sendTx,
+  handleIncomingTx
 };
