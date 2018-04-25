@@ -26,19 +26,31 @@ class Block {
   }
 }
 
+const genesisTx = {
+  txIns: [{ signature: "", txOutId: "", txOutIndex: 0 }],
+  txOuts: [
+    {
+      address:
+        "04a6f3b6709ca1669be927e72e4ff33b6057dc59575fd2a39c64ac39f78fdfc9e912adfd3be25f4a6689b3d79ba9ec84545291e7de256eb55db1e7cac36066a728",
+      amount: 50
+    }
+  ],
+  id: "8ff9eb4512fb8257cd468b604b499c4d4ff119df3831b75c9df5ec7e41c1f3cc"
+};
+
 const genesisBlock = new Block(
   0,
-  "2C4CEB90344F20CC4C77D626247AED3ED530C1AEE3E6E85AD494498B17414CAC",
-  null,
+  "5d242bf29193a1072ba70c5a2feecfd099c2c14b7657864582c48b038f7ac515",
+  "",
   1523964417,
-  "This is the genesis!!",
+  [genesisTx],
   0,
   0
 );
 
 let blockchain = [genesisBlock];
 
-let uTxOuts = [];
+let uTxOuts = processTxs(blockchain[0].data, [], 0);
 
 const getNewestBlock = () => blockchain[blockchain.length - 1];
 
