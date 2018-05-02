@@ -90,15 +90,15 @@ const findDifficulty = () => {
 };
 
 const calculateNewDifficulty = (newestBlock, blockchain) => {
-  const lastCalculateBlock = blockchain[blockchain.length - DIFFICULTY_ADJUSMENT_INTERVAL];
+  const lastCalculatedBlock = blockchain[blockchain.length - DIFFICULTY_ADJUSMENT_INTERVAL];
   const timeExpected = BLOCK_GENERATION_INTERVAL * DIFFICULTY_ADJUSMENT_INTERVAL;
-  const timeTaken = newestBlock.timestamp - lastCalculateBlock.timestamp;
+  const timeTaken = newestBlock.timestamp - lastCalculatedBlock.timestamp;
   if (timeTaken < timeExpected / 2) {
-    return lastCalculateBlock.difficulty + 1;
+    return lastCalculatedBlock.difficulty + 1;
   } else if (timeTaken > timeExpected * 2) {
-    return lastCalculateBlock.difficulty - 1;
+    return lastCalculatedBlock.difficulty - 1;
   } else {
-    return lastCalculateBlock.difficulty;
+    return lastCalculatedBlock.difficulty;
   }
 };
 
@@ -121,7 +121,7 @@ const hashMatchesDifficulty = (hash, difficulty = 0) => {
   return hashInBinary.startsWith(requiredZeros);
 };
 
-const getBlockHash = block =>
+const getBlocksHash = block =>
   createHash(
     block.index,
     block.previousHash,
@@ -135,7 +135,7 @@ const isTimeStampValid = (newBlock, oldBlock) => {
   return oldBlock.timestamp - 60 < newBlock.timestamp && newBlock.timestamp - 60 < getTimestamp();
 };
 
-const isBlockVaild = (candidateBlock, latestBlock) => {
+const isBlockValid = (candidateBlock, latestBlock) => {
   if (!isBlockStructureValid(candidateBlock)) {
     console.log("The candidate block structure is not valid");
     return false;
@@ -145,7 +145,7 @@ const isBlockVaild = (candidateBlock, latestBlock) => {
   } else if (latestBlock.hash !== candidateBlock.previousHash) {
     console.log("The previousHash of the candidate block is not the hash of the latest block");
     return false;
-  } else if (getBlockHash(candidateBlock) !== candidateBlock.hash) {
+  } else if (getBlocksHash(candidateBlock) !== candidateBlock.hash) {
     console.log("The hash of this block is invalid");
     return false;
   } else if (!isTimeStampValid(candidateBlock, latestBlock)) {
@@ -178,7 +178,7 @@ const isChainValid = candidateChain => {
 
   for (let i = 0; i < candidateChain.length; i++) {
     const currentBlock = candidateChain[i];
-    if (i !== 0 && !isBlockVaild(currentBlock, candidateChain[i - 1])) {
+    if (i !== 0 && !isBlockValid(currentBlock, candidateChain[i - 1])) {
       return null;
     }
 
@@ -212,7 +212,7 @@ const replaceChain = candidateChain => {
 };
 
 const addBlockToChain = candidateBlock => {
-  if (isBlockVaild(candidateBlock, getNewestBlock())) {
+  if (isBlockValid(candidateBlock, getNewestBlock())) {
     const processedTxs = processTxs(candidateBlock.data, uTxOuts, candidateBlock.index);
     if (processedTxs === null) {
       console.log("Couldnt process txs");
